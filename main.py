@@ -642,47 +642,7 @@ async def evaluate_code(data: CodeRequest):
 
     try:
 
-#         prompt = f"""
-# You are an expert AI coding evaluator.
-
-# Analyze the submitted coding solution.
-
-# Coding Question:
-# {data.question}
-
-# Programming Language:
-# {data.language}
-
-# User Submitted Code:
-# {data.code}
-
-# Give detailed evaluation in professional markdown format.
-
-# IMPORTANT:
-# - Do NOT rewrite full corrected code
-# - Do NOT give complete final answer
-# - Only evaluate user submission
-
-# Include:
-
-# # Code Quality Score
-
-# # Time Complexity
-
-# # Space Complexity
-
-# # Bugs / Issues
-
-# # Optimization Suggestions
-
-# # Strengths
-
-# # Edge Case Analysis
-
-# # Final Feedback
-# """
-try:
-    
+        
 prompt = f"""
 You are an expert AI coding evaluator like LeetCode / HackerRank judge.
 
@@ -748,6 +708,48 @@ RULES:
 - MUST simulate user code logically (do not execute)
 
 """
+
+#         prompt = f"""
+# You are an expert AI coding evaluator.
+
+# Analyze the submitted coding solution.
+
+# Coding Question:
+# {data.question}
+
+# Programming Language:
+# {data.language}
+
+# User Submitted Code:
+# {data.code}
+
+# Give detailed evaluation in professional markdown format.
+
+# IMPORTANT:
+# - Do NOT rewrite full corrected code
+# - Do NOT give complete final answer
+# - Only evaluate user submission
+
+# Include:
+
+# # Code Quality Score
+
+# # Time Complexity
+
+# # Space Complexity
+
+# # Bugs / Issues
+
+# # Optimization Suggestions
+
+# # Strengths
+
+# # Edge Case Analysis
+
+# # Final Feedback
+# """
+
+
 
         completion = client.chat.completions.create(
 
