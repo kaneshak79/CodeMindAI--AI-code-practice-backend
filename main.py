@@ -681,7 +681,8 @@ async def evaluate_code(data: CodeRequest):
 
 # # Final Feedback
 # """
-
+try:
+    
 prompt = f"""
 You are an expert AI coding evaluator like LeetCode / HackerRank judge.
 
