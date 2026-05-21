@@ -642,8 +642,7 @@ async def evaluate_code(data: CodeRequest):
 
     try:
 
-        
-prompt = f"""
+        prompt = f"""
 You are an expert AI coding evaluator like LeetCode / HackerRank judge.
 
 Analyze the submitted solution AND simulate test execution.
@@ -674,16 +673,12 @@ OUTPUT FORMAT (VERY IMPORTANT):
 (0–10 score)
 
 # Time Complexity
-...
 
 # Space Complexity
-...
 
 # Bugs / Issues
-...
 
 # Optimization Suggestions
-...
 
 # Test Cases Evaluation
 
@@ -709,165 +704,32 @@ RULES:
 
 """
 
-#         prompt = f"""
-# You are an expert AI coding evaluator.
-
-# Analyze the submitted coding solution.
-
-# Coding Question:
-# {data.question}
-
-# Programming Language:
-# {data.language}
-
-# User Submitted Code:
-# {data.code}
-
-# Give detailed evaluation in professional markdown format.
-
-# IMPORTANT:
-# - Do NOT rewrite full corrected code
-# - Do NOT give complete final answer
-# - Only evaluate user submission
-
-# Include:
-
-# # Code Quality Score
-
-# # Time Complexity
-
-# # Space Complexity
-
-# # Bugs / Issues
-
-# # Optimization Suggestions
-
-# # Strengths
-
-# # Edge Case Analysis
-
-# # Final Feedback
-# """
-
-
-
         completion = client.chat.completions.create(
-
             model="llama-3.3-70b-versatile",
-
             messages=[
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-
             temperature=0.5,
-
             max_tokens=1200
         )
 
         result = completion.choices[0].message.content
 
-        # STORE SUBMISSION
-
         submissions.insert_one({
-
             "question": data.question,
             "language": data.language,
             "code": data.code,
             "evaluation": result
-
         })
 
         return {
-
             "evaluation": result
-
         }
 
     except Exception as e:
-
         return {
-
             "error": str(e)
-
-        }
-
-# ==============================
-# FETCH QUESTIONS
-# ==============================
-
-@app.get("/questions")
-def get_questions():
-
-    try:
-
-        questions = []
-
-        all_questions = questions_collection.find()
-
-        for q in all_questions:
-
-            questions.append({
-
-                "id": str(q["_id"]),
-                "topic": q["topic"],
-                "difficulty": q["difficulty"],
-                "language": q["language"],
-                "question": q["question"]
-
-            })
-
-        return {
-
-            "questions": questions
-
-        }
-
-    except Exception as e:
-
-        return {
-
-            "error": str(e)
-
-        }
-
-# ==============================
-# FETCH SUBMISSIONS
-# ==============================
-
-@app.get("/submissions")
-def get_submissions():
-
-    try:
-
-        results = []
-
-        all_submissions = submissions.find()
-
-        for s in all_submissions:
-
-            results.append({
-
-                "id": str(s["_id"]),
-                "question": s["question"],
-                "language": s["language"],
-                "code": s["code"],
-                "evaluation": s["evaluation"]
-
-            })
-
-        return {
-
-            "submissions": results
-
-        }
-
-    except Exception as e:
-
-        return {
-
-            "error": str(e)
-
         }
