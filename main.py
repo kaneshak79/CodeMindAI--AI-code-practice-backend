@@ -642,10 +642,50 @@ async def evaluate_code(data: CodeRequest):
 
     try:
 
-        prompt = f"""
-You are an expert AI coding evaluator.
+#         prompt = f"""
+# You are an expert AI coding evaluator.
 
-Analyze the submitted coding solution.
+# Analyze the submitted coding solution.
+
+# Coding Question:
+# {data.question}
+
+# Programming Language:
+# {data.language}
+
+# User Submitted Code:
+# {data.code}
+
+# Give detailed evaluation in professional markdown format.
+
+# IMPORTANT:
+# - Do NOT rewrite full corrected code
+# - Do NOT give complete final answer
+# - Only evaluate user submission
+
+# Include:
+
+# # Code Quality Score
+
+# # Time Complexity
+
+# # Space Complexity
+
+# # Bugs / Issues
+
+# # Optimization Suggestions
+
+# # Strengths
+
+# # Edge Case Analysis
+
+# # Final Feedback
+# """
+
+prompt = f"""
+You are an expert AI coding evaluator like LeetCode / HackerRank judge.
+
+Analyze the submitted solution AND simulate test execution.
 
 Coding Question:
 {data.question}
@@ -656,30 +696,56 @@ Programming Language:
 User Submitted Code:
 {data.code}
 
-Give detailed evaluation in professional markdown format.
+---
 
-IMPORTANT:
-- Do NOT rewrite full corrected code
-- Do NOT give complete final answer
-- Only evaluate user submission
+STRICT INSTRUCTIONS:
 
-Include:
+1. First, evaluate the solution quality.
+2. Then generate 3 to 5 relevant test cases based on the problem.
+3. For each test case, simulate execution mentally and decide output.
+4. Mark each test as PASS or FAIL based on correctness.
+
+---
+
+OUTPUT FORMAT (VERY IMPORTANT):
 
 # Code Quality Score
+(0–10 score)
 
 # Time Complexity
+...
 
 # Space Complexity
+...
 
 # Bugs / Issues
+...
 
 # Optimization Suggestions
+...
 
-# Strengths
+# Test Cases Evaluation
 
-# Edge Case Analysis
+For each test case:
+
+- Input: ...
+- Expected Output: ...
+- Actual Output (from user's code): ...
+- Status: pass/fail
 
 # Final Feedback
+
+Give short final verdict.
+
+---
+
+RULES:
+- DO NOT give full corrected code
+- DO NOT solve the problem fully
+- MUST include test cases section
+- MUST include pass/fail evaluation
+- MUST simulate user code logically (do not execute)
+
 """
 
         completion = client.chat.completions.create(
