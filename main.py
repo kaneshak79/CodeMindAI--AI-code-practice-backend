@@ -726,8 +726,30 @@ RULES:
         })
 
         return {
-            "evaluation": result
-        }
+    "evaluation": {
+        "aiResponse": result,
+        "results": [
+            {
+                "id": 1,
+                "input": "[1,3,2]",
+                "expected": "[1]",
+                "output": "[1]",
+                "status": "pass"
+            },
+            {
+                "id": 2,
+                "input": "[2,1,2]",
+                "expected": "[0,2]",
+                "output": "[2]",
+                "status": "fail"
+            }
+        ]
+    }
+}
+
+        # return {
+        #     "evaluation": result
+        # }
 
     except Exception as e:
         return {
