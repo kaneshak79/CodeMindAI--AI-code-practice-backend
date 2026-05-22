@@ -695,6 +695,20 @@ OUTPUT FORMAT (VERY IMPORTANT - RETURN ONLY VALID JSON):
   }}
 }}
 
+OUTPUT FORMAT (STRICT MARKDOWN):
+
+# Code Quality Score (0-10)
+
+# Time Complexity
+
+# Space Complexity
+
+# Bugs / Issues
+
+# Optimization Suggestions
+
+# Test Cases Evaluation
+
 # Final Feedback
 - Give clear summary of performance
 
