@@ -695,8 +695,6 @@ OUTPUT FORMAT (VERY IMPORTANT - RETURN ONLY VALID JSON):
   }}
 }}
 
-# Final Feedback
-- Give clear summary of performance
 
 RULES:
 - DO NOT return markdown
