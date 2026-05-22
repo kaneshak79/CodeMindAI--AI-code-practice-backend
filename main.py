@@ -641,7 +641,6 @@ FORMAT:
 async def evaluate_code(data: CodeRequest):
 
     try:
-
         prompt = f"""
 You are an expert AI coding evaluator like LeetCode / HackerRank judge.
 
@@ -660,98 +659,231 @@ User Submitted Code:
 
 STRICT INSTRUCTIONS:
 
-1. First, evaluate the solution quality.
-2. Then generate 3 to 5 relevant test cases based on the problem.
-3. For each test case, simulate execution mentally and decide output.
-4. Mark each test as PASS or FAIL based on correctness.
+1. Understand the problem carefully.
+2. Generate 3 to 5 relevant test cases based ONLY on the problem.
+3. For each test case:
+   - Predict expected output
+   - Simulate user's code logically (DO NOT execute)
+   - Decide PASS or FAIL
 
 ---
 
-OUTPUT FORMAT (VERY IMPORTANT):
+OUTPUT FORMAT (VERY IMPORTANT - RETURN ONLY VALID JSON):
 
-# Code Quality Score
-(0–10 score)
-
-# Time Complexity
-
-# Space Complexity
-
-# Bugs / Issues
-
-# Optimization Suggestions
-
-# Test Cases Evaluation
-
-For each test case:
-
-- Input: ...
-- Expected Output: ...
-- Actual Output (from user's code): ...
-- Status: pass/fail
-
-# Final Feedback
-
-Give short final verdict.
-
----
+{{
+  "aiResponse": "short explanation of evaluation",
+  "results": [
+    {{
+      "id": 1,
+      "input": "...",
+      "expected": "...",
+      "output": "...",
+      "status": "pass"
+    }},
+    {{
+      "id": 2,
+      "input": "...",
+      "expected": "...",
+      "output": "...",
+      "status": "fail"
+    }}
+  ],
+  "summary": {{
+    "total": 3,
+    "passed": 2,
+    "failed": 1
+  }}
+}}
 
 RULES:
-- DO NOT give full corrected code
-- DO NOT solve the problem fully
-- MUST include test cases section
-- MUST include pass/fail evaluation
-- MUST simulate user code logically (do not execute)
-
+- DO NOT return markdown
+- DO NOT include explanations outside JSON
+- DO NOT include code blocks
+- MUST be valid JSON only
 """
 
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.5,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4,
             max_tokens=1200
         )
 
-        result = completion.choices[0].message.content
+        result_text = completion.choices[0].message.content
 
+        # Convert AI response to JSON safely
+        import json
+
+        try:
+            result_json = json.loads(result_text)
+        except:
+            # fallback if AI returns broken JSON
+            return {
+                "evaluation": {
+                    "aiResponse": result_text,
+                    "results": [],
+                    "summary": {
+                        "total": 0,
+                        "passed": 0,
+                        "failed": 0
+                    }
+                }
+            }
+
+        # store in DB
         submissions.insert_one({
             "question": data.question,
             "language": data.language,
             "code": data.code,
-            "evaluation": result
+            "evaluation": result_json
         })
 
         return {
-    "evaluation": {
-        "aiResponse": result,
-        "results": [
-            {
-                "id": 1,
-                "input": "[1,3,2]",
-                "expected": "[1]",
-                "output": "[1]",
-                "status": "pass"
-            },
-            {
-                "id": 2,
-                "input": "[2,1,2]",
-                "expected": "[0,2]",
-                "output": "[2]",
-                "status": "fail"
-            }
-        ]
-    }
-}
-
-        # return {
-        #     "evaluation": result
-        # }
+            "evaluation": result_json
+        }
 
     except Exception as e:
         return {
             "error": str(e)
         }
+
+# @app.post("/evaluate")
+# async def evaluate_code(data: CodeRequest):
+
+#     try:
+#         You are an AI coding judge.
+
+# Task:
+# Given a coding problem and user code:
+
+# 1. Understand the problem.
+# 2. Generate 3–5 relevant test cases.
+# 3. For each test case:
+#    - predict expected output
+#    - simulate user code behavior logically
+#    - decide pass/fail
+
+# IMPORTANT:
+# - Do NOT assume fixed test cases
+# - Do NOT reuse same inputs
+# - Generate test cases based on the problem only
+# - Evaluate strictly based on correctness of logic
+
+# Return ONLY JSON:
+
+# {
+#   "aiResponse": "short explanation",
+#   "results": [
+#     {
+#       "id": 1,
+#       "input": "...",
+#       "expected": "...",
+#       "output": "...",
+#       "status": "pass/fail"
+#     }
+#   ],
+#   "summary": {
+#     "total": 3,
+#     "passed": 2,
+#     "failed": 1
+#   }
+# }
+
+#         prompt = f"""
+# You are an expert AI coding evaluator like LeetCode / HackerRank judge.
+
+# Analyze the submitted solution AND simulate test execution.
+
+# Coding Question:
+# {data.question}
+
+# Programming Language:
+# {data.language}
+
+# User Submitted Code:
+# {data.code}
+
+# ---
+
+# STRICT INSTRUCTIONS:
+
+# 1. First, evaluate the solution quality.
+# 2. Then generate 3 to 5 relevant test cases based on the problem.
+# 3. For each test case, simulate execution mentally and decide output.
+# 4. Mark each test as PASS or FAIL based on correctness.
+
+# ---
+
+# OUTPUT FORMAT (VERY IMPORTANT):
+
+# # Code Quality Score
+# (0–10 score)
+
+# # Time Complexity
+
+# # Space Complexity
+
+# # Bugs / Issues
+
+# # Optimization Suggestions
+
+# # Test Cases Evaluation
+
+# For each test case:
+
+# - Input: ...
+# - Expected Output: ...
+# - Actual Output (from user's code): ...
+# - Status: pass/fail
+
+# # Final Feedback
+
+# Give short final verdict.
+
+# ---
+
+# RULES:
+# - DO NOT give full corrected code
+# - DO NOT solve the problem fully
+# - MUST include test cases section
+# - MUST include pass/fail evaluation
+# - MUST simulate user code logically (do not execute)
+
+# """
+
+#         completion = client.chat.completions.create(
+#             model="llama-3.3-70b-versatile",
+#             messages=[
+#                 {
+#                     "role": "user",
+#                     "content": prompt
+#                 }
+#             ],
+#             temperature=0.5,
+#             max_tokens=1200
+#         )
+
+#         result = completion.choices[0].message.content
+
+#         submissions.insert_one({
+#             "question": data.question,
+#             "language": data.language,
+#             "code": data.code,
+#             "evaluation": result
+#         })
+
+#         return {
+#     "evaluation": {
+#         "aiResponse": result,
+       
+#     }
+# }
+
+#         # return {
+#         #     "evaluation": result
+#         # }
+
+#     except Exception as e:
+#         return {
+#             "error": str(e)
+#         }
