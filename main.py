@@ -641,27 +641,27 @@ async def evaluate_code(data: CodeRequest):
 
     try:
         prompt = f"""
-You are a strict coding judge system like LeetCode.
-
-Return ONLY valid JSON. No markdown, no backticks, no extra text.
-
-Even if the code is correct, ALWAYS generate 3–5 test cases and evaluate them.
+You are a strict online judge system like LeetCode.
 
 Coding Question:
 {data.question}
 
-Programming Language:
+Language:
 {data.language}
 
 User Code:
 {data.code}
 
-----------------------------
+STRICT REQUIREMENTS:
+- Generate 3 to 5 NEW test cases based ONLY on the question
+- Each run MUST be different and not reused
+- Simulate code logically (DO NOT execute)
+- Return VALID JSON ONLY
 
-OUTPUT FORMAT (STRICT JSON ONLY):
+FORMAT:
 
 {{
-  "aiResponse": "short evaluation summary",
+  "aiResponse": "short explanation",
   "results": [
     {{
       "id": 1,
@@ -669,13 +669,6 @@ OUTPUT FORMAT (STRICT JSON ONLY):
       "expected": "...",
       "output": "...",
       "status": "pass"
-    }},
-    {{
-      "id": 2,
-      "input": "...",
-      "expected": "...",
-      "output": "...",
-      "status": "fail"
     }}
   ],
   "summary": {{
@@ -684,57 +677,28 @@ OUTPUT FORMAT (STRICT JSON ONLY):
     "failed": 1
   }}
 }}
-
-RULES:
-- MUST return valid JSON only
-- NEVER return markdown
-- NEVER return explanation outside JSON
-- ALWAYS include results
 """
 
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.4,
-            max_tokens=1200
+            temperature=0.9  # 🔥 IMPORTANT (increase randomness)
         )
-
-        import json
-        import re
 
         result_text = completion.choices[0].message.content
 
-        # Clean AI output (removes ```json or ```)
-        cleaned = re.sub(r"```json|```", "", result_text).strip()
+        import json
 
         try:
-            result_json = json.loads(cleaned)
-        except Exception:
-            return {
-                "evaluation": {
-                    "aiResponse": result_text,
-                    "results": [],
-                    "summary": {
-                        "total": 0,
-                        "passed": 0,
-                        "failed": 0
-                    }
-                }
+            result_json = json.loads(result_text)
+        except:
+            result_json = {
+                "aiResponse": result_text,
+                "results": [],
+                "summary": {"total": 0, "passed": 0, "failed": 0}
             }
 
-        # 🔥 Safety: recompute summary (IMPORTANT FIX)
-        if "results" in result_json and isinstance(result_json["results"], list):
-            total = len(result_json["results"])
-            passed = len([r for r in result_json["results"] if r.get("status") == "pass"])
-            failed = total - passed
-
-            result_json["summary"] = {
-                "total": total,
-                "passed": passed,
-                "failed": failed
-            }
-
-        # store in DB
+        # ❗ DO NOT reuse old DB evaluation blindly
         submissions.insert_one({
             "question": data.question,
             "language": data.language,
@@ -742,14 +706,10 @@ RULES:
             "evaluation": result_json
         })
 
-        return {
-            "evaluation": result_json
-        }
+        return {"evaluation": result_json}
 
     except Exception as e:
-        return {
-            "error": str(e)
-        }
+        return {"error": str(e)}
 
 # @app.post("/evaluate")
 # async def evaluate_code(data: CodeRequest):
